@@ -6,7 +6,7 @@ from village.custom_classes.task import Event, Output, Task
 # https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
 
 
-class TestSpeed(Task):
+class TestPulsePal(Task):
     """
     This class defines the task.
 
@@ -75,20 +75,19 @@ class TestSpeed(Task):
         sends the state machine to the bpod that will run the trial.
         """
 
-        self.controller.add_state(
+        self.bpod.add_state(
             state_name="A",
-            state_timer=2,
+            state_timer=5,
             state_change_conditions={Event.Tup: "B"},
-            output_actions=[Output.SoftCode8, Output.BNC1Low],
+            output_actions=[Output.BNC1Low],
         )
 
-        self.controller.add_state(
+        self.bpod.add_state(
             state_name="B",
-            state_timer=2,
+            state_timer=5,
             state_change_conditions={Event.Tup: "A"},
-            output_actions=[Output.SoftCode14, Output.BNC1High],
+            output_actions=[Output.BNC1High],
         )
-
 
     def after_trial(self):
         """
@@ -103,7 +102,6 @@ class TestSpeed(Task):
         """
 
         pass
-
 
     def close(self):
         """

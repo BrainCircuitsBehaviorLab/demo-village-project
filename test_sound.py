@@ -1,12 +1,7 @@
 from village.custom_classes.task import Event, Output, Task
 
 
-# click on the link below to see the documentation about how to create
-# tasks, plots and training protocols
-# https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
-
-
-class TestSpeed(Task):
+class TestSound(Task):
     """
     This class defines the task.
 
@@ -27,10 +22,10 @@ class TestSpeed(Task):
 
         self.info = """
 
-        Test Speed Task
+        Test Sound Task
         -------------------
 
-        This task is a simple test for measuring latencies and speed.
+        Playing sounds.
         """
 
     def start(self):
@@ -61,13 +56,7 @@ class TestSpeed(Task):
         self.sound_duration = 1
         self.sound_gain = 0.1
         self.sound_file = "sound.wav"
-        self.stimulus_duration = 1
-        self.stimulus_x_pos = 100
-        self.stimulus_y_pos = 200
-        self.image_file = "image.jpg"
-        self.image2_file = "image.png"
-        self.video1_file = "video.avi"
-        self.video2_file = "video.mp4"
+
 
     def create_trial(self):
         """
@@ -79,15 +68,59 @@ class TestSpeed(Task):
             state_name="A",
             state_timer=2,
             state_change_conditions={Event.Tup: "B"},
-            output_actions=[Output.SoftCode8, Output.BNC1Low],
+            output_actions=[Output.SoftCode1, Output.BNC1Low],
         )
 
         self.controller.add_state(
             state_name="B",
             state_timer=2,
-            state_change_conditions={Event.Tup: "A"},
-            output_actions=[Output.SoftCode14, Output.BNC1High],
+            state_change_conditions={Event.Tup: "C"},
+            output_actions=[Output.SoftCode5, Output.BNC1High],
         )
+
+        self.controller.add_state(
+            state_name="C",
+            state_timer=2,
+            state_change_conditions={Event.Tup: "D"},
+            output_actions=[Output.SoftCode2, Output.BNC1Low],
+        )
+
+        self.controller.add_state(
+            state_name="D",
+            state_timer=2,
+            state_change_conditions={Event.Tup: "color"},
+            output_actions=[Output.SoftCode5, Output.BNC1High],
+        )
+
+        self.controller.add_state(
+            state_name="color",
+            state_timer=0,
+            state_change_conditions={Event.Tup: "E"},
+            output_actions=[Output.SoftCode3, Output.BNC1Low],
+        )
+
+        self.controller.add_state(
+            state_name="E",
+            state_timer=2,
+            state_change_conditions={Event.Tup: "F"},
+            output_actions=[Output.SoftCode5, Output.BNC1Low],
+        )
+
+        self.controller.add_state(
+            state_name="F",
+            state_timer=10,
+            state_change_conditions={Event.Tup: "G"},
+            output_actions=[Output.SoftCode4, Output.BNC1High],
+        )
+
+        self.controller.add_state(
+            state_name="G",
+            state_timer=2,
+            state_change_conditions={Event.Tup: "H"},
+            output_actions=[Output.SoftCode5, Output.BNC1Low],
+        )
+
+
 
 
     def after_trial(self):
@@ -101,7 +134,6 @@ class TestSpeed(Task):
         an alarm will be triggered.
         This threshold can be adjusted in the Settings tab of the GUI.
         """
-
         pass
 
 
@@ -110,5 +142,4 @@ class TestSpeed(Task):
         Here you can perform any actions you want to take once the task is completed,
         such as sending a message via email or Slack, creating a plot, and more.
         """
-
         pass

@@ -6,7 +6,7 @@ from village.custom_classes.task import Event, Output, Task
 # https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
 
 
-class TestSpeed(Task):
+class TestVideo(Task):
     """
     This class defines the task.
 
@@ -27,10 +27,10 @@ class TestSpeed(Task):
 
         self.info = """
 
-        Test Speed Task
+        Test Video Task
         -------------------
 
-        This task is a simple test for measuring latencies and speed.
+        Displaying visual stimulus and video.
         """
 
     def start(self):
@@ -58,9 +58,6 @@ class TestSpeed(Task):
         - self.settings.punishment_time: punishment duration
         - self.settings.iti_time: inter-trial interval
         """
-        self.sound_duration = 1
-        self.sound_gain = 0.1
-        self.sound_file = "sound.wav"
         self.stimulus_duration = 1
         self.stimulus_x_pos = 100
         self.stimulus_y_pos = 200
@@ -85,7 +82,7 @@ class TestSpeed(Task):
         self.controller.add_state(
             state_name="B",
             state_timer=2,
-            state_change_conditions={Event.Tup: "A"},
+            state_change_conditions={Event.Tup: "exit"},
             output_actions=[Output.SoftCode14, Output.BNC1High],
         )
 
