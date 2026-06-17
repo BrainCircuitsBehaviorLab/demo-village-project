@@ -109,7 +109,7 @@ def plot_first_poke_side(ax, df):
     ax.set_ylabel("First response (side)")
     ax.legend(title="Outcome")
     ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)   
+    ax.spines['right'].set_visible(False)
 
 def plot_lick_raster_with_states(ax, df, fig):
             """
@@ -160,7 +160,7 @@ def plot_lick_raster_with_states(ax, df, fig):
             # --- PLOT LICKS ---
             ax.scatter(left_raster_times, left_raster_trials, marker='|', color='#76B7D2',s=60, alpha=1.0, linewidths=0.5, label='Left lick', zorder=10)
             ax.scatter(right_raster_times, right_raster_trials, marker='|', color='#F28E2B', s=60,  alpha=1.0, linewidths=0.5, label='Right lick',  zorder=10)
-            
+
             # Legend for states
             state_legend = [
                 Patch(facecolor='orange', alpha=0.3, label='side led ON'),
@@ -344,7 +344,7 @@ def plot_delay_probabilities(ax, df, curve_power=2):
 #             ax.plot(i + 1, 0.5, 'o', color='black', markersize=5)
 #         if row["miss"]:
 #             ax.plot(i + 1, -0.35, 'o', color='black', markersize=5)
-        
+
 #     # --- SIDE LABLES ---
 #     ax.text(1.02, 0.1, 'L', ha='left', va='top', color='green', transform=ax.transAxes, fontsize=10)
 #     ax.text(1.02, 0.9, 'R', ha='left', va='bottom', color='purple', transform=ax.transAxes, fontsize=10)
@@ -377,7 +377,7 @@ def plot_latency_to_first_poke(df, ax=None):
     ax.plot(df.trial, df.motor_time, color='dodgerblue', label='MT', linewidth=1)
     ax.plot(df.trial, df.reaction_time, color='black', label='RT', linewidth=1)
 
-    # Y log scale and ticks 
+    # Y log scale and ticks
     custom_yticks = [0.1, 1, 10, 20, 50, 100, 200, 300]
     ax.set_yscale('log')
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: '{:g}'.format(y)))
@@ -457,7 +457,7 @@ def plot_lick_raster_with_states_S3(ax, df, fig):
             ax.scatter(left_raster_times, left_raster_trials, marker='|', color='#76B7D2',s=60, alpha=1.0, linewidths=0.5, label='Left lick', zorder=10)
             ax.scatter(right_raster_times, right_raster_trials, marker='|', color='#F28E2B', s=60,  alpha=1.0, linewidths=0.5, label='Right lick',  zorder=10)
             ax.scatter(centre_raster_times, centre_raster_trials, marker='|', color='grey', s=60,  alpha=1.0, linewidths=0.5, label='Centre lick',  zorder=10)
-            
+
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
 
@@ -525,22 +525,6 @@ def plot_lick_raster_with_states_S3_S4(ax, df, fig=None):
     ax.set_title("Lick Raster (aligned to TRIAL_START)")
     ax.set_ylim(0, df['trial_duration'].max() + 1)
     ax.spines[['top', 'right']].set_visible(False)
-    
-    # --- Opto trial indicator (light blue dot above raster) ---
-    if 'opto_trial' in df.columns:
-        opto_trials = df.loc[df['opto_trial'] == 1, 'trial'].values
-
-        y_opto = df['trial_duration'].max() + 0.5  # appena sopra il raster
-
-        ax.scatter(
-            opto_trials,
-            [y_opto] * len(opto_trials),
-            marker='o',          # usa 'x' se preferisci la crocetta
-            color='lightskyblue',
-            s=25,
-            zorder=5,
-            label='Opto trial'
-        )
 
     # Legend for licks
     lick_legend = [
@@ -622,7 +606,7 @@ def plot_lick_raster_with_states_S5(ax, df, fig=None):
     ax.set_title("Lick Raster (aligned to TRIAL_START)")
     ax.set_ylim(0, df['trial_duration'].max() + 1)
     ax.spines[['top', 'right']].set_visible(False)
-    
+
 
     # Legend for licks
     lick_legend = [
@@ -650,7 +634,7 @@ def plot_lick_raster_with_states_S5(ax, df, fig=None):
 def plot_iti_histogram(ax, df, bins=10):
     """
     Plot histogram of ITI durations.
-    
+
     Parameters:
         ax : matplotlib.axes.Axes
             The axis to plot on.
@@ -665,7 +649,7 @@ def plot_iti_histogram(ax, df, bins=10):
         return
 
     iti_data = df['post_trial_duration'].dropna()
-    
+
     ax.hist(iti_data, bins=bins, color='lightseagreen', edgecolor='black', alpha=0.8)
     ax.set_title("ITI duration histogram")
     ax.set_xlabel("ITI duration (s)")
@@ -900,7 +884,7 @@ def plot_psychometric_curve(df, ax=None):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    return ax    
+    return ax
 # ---------------------------------------------------------
 # Helper: ON color depends on system_name
 # ---------------------------------------------------------
@@ -948,230 +932,6 @@ def get_on_color(df, col="system_name"):
     return "royalblue"
 
 
-def plot_probability_right_reward_opto(df: pd.DataFrame, ax=None):
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 5))
-
-    df = df.copy()
-    df = df.replace(np.nan, 0)
-
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    df["right_choice"] = (df["response_side"] == "right").astype(int)
-    df["rolling_avg_right"] = df["right_choice"].rolling(window=5, min_periods=1).mean()
-
-    ax.plot(df["trial"], df["probability_r"], label=" P(reward on right)",
-            color="black", linewidth=1, alpha=0.7)
-
-    ax.plot(df["trial"], df["rolling_avg_right"], label="Right choice frequency",
-            color="mediumturquoise", linewidth=2)
-
-    df["first_resp_left"] = (df["response_side"] == "left").astype(int)
-    df["first_resp_right"] = (df["response_side"] == "right").astype(int)
-    df["omission"] = (df["outcome"] == "omission").astype(int)
-    df["miss"] = (df["outcome"] == "miss").astype(int)
-
-    # --- Plot ticks ---
-    for i, row in df.iterrows():
-        is_opto = ("opto_trial" in df.columns) and (row["opto_trial"] == 1)
-
-        if row["first_resp_right"]:
-            markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            tick_color = on_color if is_opto else "purple"   # <-- NEW
-            ax.plot(i + 1, 1.15 if markersize == 15 else 1.35, '|',
-                    color=tick_color, markersize=markersize)
-
-        if row["first_resp_left"]:
-            markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            tick_color = on_color if is_opto else "green"    # <-- NEW
-            ax.plot(i + 1, -0.15 if markersize == 15 else -0.35, '|',
-                    color=tick_color, markersize=markersize)
-
-        if row["omission"]:
-            ax.plot(i + 1, 0.5, 'o', color='black', markersize=5)
-
-        if row["miss"]:
-            ax.plot(i + 1, -0.35, 'o', color='black', markersize=5)
-
-    if "Block_index" in df.columns:
-        unique_blocks = df["Block_index"].unique()
-        for block in unique_blocks:
-            block_data = df[df["Block_index"] == block]
-            start, end = block_data["trial"].min(), block_data["trial"].max()
-            block_prob = block_data["probability_r"].iloc[0]
-            color = "purple" if block_prob > 0.5 else "green" if block_prob < 0.5 else "blue"
-            ax.hlines(y=1.7, xmin=start, xmax=end, colors=color, linewidth=10)
-            ax.text((start + end) / 2, 1.6, f"{block_prob:.2f}", ha="center", va="center",
-                    fontsize=6, backgroundcolor="white")
-
-        changes = df["Block_index"].diff().fillna(0).ne(0)
-        for trial in df[changes]["trial"]:
-            ax.axvline(x=trial-0.5, color="gray", linestyle="--")
-
-    ax.set_ylim(-0.5, 1.7)
-    ax.set_yticks([0, 0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 1])
-    ax.axhline(y=0.5, linestyle="--", color="lightgray", alpha=0.7)
-    ax.axhline(y=0, linestyle="solid", color="black", alpha=0.7)
-    ax.axhline(y=1, linestyle="solid", color="black", alpha=0.7)
-
-    ax.text(1.02, 0.1, "L", transform=ax.transAxes, color="#76B7D2", fontsize=10)
-    ax.text(1.02, 0.9, "R", transform=ax.transAxes, color="#F28E2B", fontsize=10)
-    ax.text(1.02, 0.46, "C", transform=ax.transAxes, color="grey", fontsize=10)
-
-    ax.set_title("P(reward on right) vs. Choice (Rolling)")
-    ax.set_xlabel("Trial")
-    ax.set_ylabel("P(right)")
-    ax.set_xticks(df["trial"][::20])
-    ax.set_xticklabels(df["trial"][::20])
-
-    ax.legend(loc="upper left")
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    return ax
-
-
-def plot_psychometric_curve_opto(df, ax=None):
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(4, 3))
-
-    df = df.copy()
-    df = df[df['response_side'].isin(['left', 'right'])].copy()
-    df['probability_r'] = df['probability_r'].astype(float)
-    df['first_trial_response_num'] = (df['response_side'] == 'right').astype(int)
-
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    def add_psycho(sub_df, label, color, linestyle='-'):
-        if sub_df.empty:
-            return
-
-        probs = np.sort(sub_df['probability_r'].unique())
-        right_choice_freq = [
-            sub_df[sub_df['probability_r'] == p]['first_trial_response_num'].mean()
-            for p in probs
-        ]
-
-        ax.scatter(probs, right_choice_freq, color=color, s=20, label=label)
-
-        x = np.linspace(0, 1, 200)
-        try:
-            if sub_df['first_trial_response_num'].nunique() > 1 and len(sub_df) >= 5:
-                pars, _ = curve_fit(probit, sub_df['probability_r'], sub_df['first_trial_response_num'], p0=[0, 1])
-                ax.plot(x, probit(x, *pars), color=color, linewidth=2, linestyle=linestyle)
-            else:
-                ax.plot(probs, right_choice_freq, color=color, linewidth=2, linestyle=linestyle)
-        except RuntimeError:
-            ax.plot(probs, right_choice_freq, color=color, linewidth=2, linestyle=linestyle)
-
-    add_psycho(df, 'All trials', color='black', linestyle='-')
-
-    if 'prev_opto_trial' in df.columns and 'prev_iti_duration' in df.columns:
-        on_mask, off_mask = get_on_off_masks(df, iti_min=0.5, iti_max=10.0)
-
-        add_psycho(df.loc[on_mask],  'ON',  color=on_color, linestyle='-')      # <-- NEW
-        add_psycho(df.loc[off_mask], 'OFF', color='gray',   linestyle='--')
-
-    ax.set_ylim(0, 1)
-    ax.axhline(0.5, color='gray', linestyle='--')
-    ax.axvline(0.5, color='gray', linestyle='--')
-    ax.set_xlabel('Right reward probability')
-    ax.set_ylabel('Right choice rate')
-    ax.set_title('Psychometric curve')
-    ax.legend(loc='lower right', fontsize=6)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    return ax
-
-
-def plot_lick_raster_with_states_opto(ax, df, fig=None):
-    left_raster_trials, left_raster_times = [], []
-    centre_raster_trials, centre_raster_times = [], []
-    right_raster_trials, right_raster_times = [], []
-
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    for i, row in df.iterrows():
-        try:
-            trial = row['trial']
-            t0 = row['TRIAL_START']
-
-            left_licks = [lick - t0 for lick in parse_licks(row.get('left_poke_in', ''))]
-            centre_licks = [lick - t0 for lick in parse_licks(row.get('centre_poke_in', ''))]
-            right_licks = [lick - t0 for lick in parse_licks(row.get('right_poke_in', ''))]
-
-            left_raster_trials.extend([trial] * len(left_licks))
-            left_raster_times.extend(left_licks)
-            centre_raster_trials.extend([trial] * len(centre_licks))
-            centre_raster_times.extend(centre_licks)
-            right_raster_trials.extend([trial] * len(right_licks))
-            right_raster_times.extend(right_licks)
-
-            def rel(key):
-                return row.get(key, t0) - t0
-
-            bands = [
-                (rel('STATE_c_led_on_START'), rel('STATE_c_led_on_END'), 'yellow', 'Center LED'),
-                (rel('STATE_side_led_on_START'), rel('STATE_side_led_on_END'), 'orchid', 'Side LED'),
-                (rel('STATE_drink_delay_START'), rel('STATE_drink_delay_END'), 'orange', 'ITI'),
-                (rel('STATE_water_delivery_START'), rel('STATE_water_delivery_END'), 'blue', 'Reward'),
-                (rel('STATE_penalty_START'), rel('STATE_penalty_END'), 'firebrick', 'Penalty')
-            ]
-
-            for start, end, color, _ in bands:
-                ax.fill_between([trial - 0.4, trial + 0.4], start, end, color=color, alpha=0.3, zorder=1)
-
-        except Exception as e:
-            print(f"[Raster] Trial {i} skipped due to error: {e}")
-            continue
-
-    ax.scatter(left_raster_trials, left_raster_times, marker='_', color='#76B7D2', s=40, alpha=0.7, label='Left')
-    ax.scatter(centre_raster_trials, centre_raster_times, marker='_', color='grey', s=40, alpha=0.7, label='Centre')
-    ax.scatter(right_raster_trials, right_raster_times, marker='_', color='#F28E2B', s=40, alpha=0.7, label='Right')
-
-    ax.set_xlabel("Trial")
-    ax.set_ylabel("Time from trial start (s)")
-    ax.set_title("Lick Raster (aligned to TRIAL_START)")
-    ax.set_ylim(0, df['trial_duration'].max() + 1)
-    ax.spines[['top', 'right']].set_visible(False)
-
-    # --- Opto trial indicator (colored by system) ---
-    if 'opto_trial' in df.columns:
-        opto_trials = df.loc[df['opto_trial'] == 1, 'trial'].values
-        y_opto = df['trial_duration'].max() + 0.1
-
-        ax.scatter(
-            opto_trials,
-            [y_opto] * len(opto_trials),
-            marker='o',
-            color=on_color,      # <-- NEW
-            s=25,
-            zorder=5,
-            label='Opto trial'
-        )
-
-    lick_legend = [
-        Patch(color='#76B7D2', label='Left'),
-        Patch(color='#F28E2B', label='Right'),
-        Patch(color='grey', label='Center')
-    ]
-
-    state_legend = [
-        Patch(facecolor='yellow', alpha=0.5, label='Center LED'),
-        Patch(facecolor='orchid', alpha=0.5, label='Side LED'),
-        Patch(facecolor='orange', alpha=0.5, label='ITI'),
-        Patch(facecolor='blue', alpha=0.5, label='Reward'),
-        Patch(facecolor='firebrick', alpha=0.5, label='Penalty')
-    ]
-
-    all_handles = lick_legend + state_legend
-    ax.legend(handles=all_handles, loc='center left', bbox_to_anchor=(0.99, 0.5),
-              fontsize=6, frameon=False)
-
-    return ax
-
-
 def plot_iti_histogram(ax, df, bins=10):
     if 'iti_duration' not in df.columns:
         ax.text(0.5, 0.5, 'No ITI data', ha='center', va='center', fontsize=8)
@@ -1187,117 +947,6 @@ def plot_iti_histogram(ax, df, bins=10):
     ax.spines[['top', 'right']].set_visible(False)
 
 
-def plot_latency_to_first_poke_opto(df, ax=None, test='mannwhitney'):
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(7, 4))
-
-    d = df.copy()
-
-    on_color = get_on_color(d, col="system_name")  # <-- NEW
-
-    for col in ['motor_time', 'reaction_time']:
-        d[col] = pd.to_numeric(d[col], errors='coerce')
-    d = d.dropna(subset=['motor_time', 'reaction_time'])
-    d = d[(d['motor_time'] > 0) & (d['reaction_time'] > 0)]
-
-    on_mask, off_mask = get_on_off_masks(d, iti_min=0.5, iti_max=10.0)
-
-    mt_off = d.loc[off_mask, 'motor_time'].values
-    mt_on  = d.loc[on_mask,  'motor_time'].values
-    rt_off = d.loc[off_mask, 'reaction_time'].values
-    rt_on  = d.loc[on_mask,  'reaction_time'].values
-
-    def p_and_label(a, b):
-        a = np.asarray(a, dtype=float)
-        b = np.asarray(b, dtype=float)
-        if len(a) < 2 or len(b) < 2:
-            return np.nan, "n<2"
-
-        if test == 'mannwhitney':
-            from scipy.stats import mannwhitneyu
-            p = mannwhitneyu(a, b, alternative='two-sided').pvalue
-        elif test == 'ttest_log':
-            from scipy.stats import ttest_ind
-            p = ttest_ind(np.log10(a), np.log10(b), equal_var=False).pvalue
-        else:
-            raise ValueError("test must be 'mannwhitney' or 'ttest_log'")
-
-        if np.isnan(p):
-            stars = "n/a"
-        elif p < 0.001:
-            stars = "***"
-        elif p < 0.01:
-            stars = "**"
-        elif p < 0.05:
-            stars = "*"
-        else:
-            stars = "ns"
-
-        return p, stars
-
-    def add_sig(ax, x1, x2, y, p, stars, h=0.06):
-        ax.plot([x1, x1, x2, x2], [y, y*(1+h), y*(1+h), y], lw=1, c='black')
-        txt = stars if np.isnan(p) else f"{stars} (p={p:.3g})"
-        ax.text((x1+x2)/2, y*(1+h*1.8), txt, ha='center', va='bottom', fontsize=8)
-
-    data = [mt_off, mt_on, rt_off, rt_on]
-    positions = [1, 2, 4, 5]
-
-    bp = ax.boxplot(
-        data,
-        positions=positions,
-        widths=0.7,
-        patch_artist=True,
-        showfliers=False,
-        medianprops=dict(color='black', linewidth=1.2),
-        whiskerprops=dict(color='black', linewidth=1),
-        capprops=dict(color='black', linewidth=1)
-    )
-
-    # OFF gray, ON system-colored
-    facecolors = ['lightgray', on_color, 'lightgray', on_color]  # <-- NEW
-    for patch, fc in zip(bp['boxes'], facecolors):
-        patch.set_facecolor(fc)
-        patch.set_edgecolor('black')
-        patch.set_alpha(0.9)
-
-    def jitter_scatter(x, vals, color):
-        if len(vals) == 0:
-            return
-        xs = x + (np.random.rand(len(vals)) - 0.5) * 0.18
-        ax.scatter(xs, vals, s=10, alpha=0.35, color=color, edgecolors='none', zorder=3)
-
-    jitter_scatter(1, mt_off, 'gray')
-    jitter_scatter(2, mt_on,  on_color)  # <-- NEW
-    jitter_scatter(4, rt_off, 'gray')
-    jitter_scatter(5, rt_on,  on_color)  # <-- NEW
-
-    ax.set_xticks([1.5, 4.5])
-    ax.set_xticklabels(['MT', 'RT'])
-    ax.set_ylabel('Latency (s)')
-    ax.set_title('Latency ON vs OFF')
-
-    ax.set_yscale('log')
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    p_mt, s_mt = p_and_label(mt_off, mt_on)
-    p_rt, s_rt = p_and_label(rt_off, rt_on)
-
-    def safe_max(arr1, arr2):
-        return np.nanmax(np.concatenate([arr1, arr2])) if (len(arr1) + len(arr2)) > 0 else np.nan
-
-    y_mt = safe_max(mt_off, mt_on)
-    y_rt = safe_max(rt_off, rt_on)
-
-    if not np.isnan(y_mt):
-        add_sig(ax, 1, 2, y_mt * 1.15, p_mt, s_mt)
-    if not np.isnan(y_rt):
-        add_sig(ax, 4, 5, y_rt * 1.15, p_rt, s_rt)
-
-    return ax
-
-
 def wilson_ci(k, n, z=1.96):
     if n == 0:
         return (float("nan"), float("nan"))
@@ -1306,60 +955,6 @@ def wilson_ci(k, n, z=1.96):
     center = (phat + (z**2) / (2*n)) / denom
     half = (z * math.sqrt((phat*(1-phat) + (z**2)/(4*n)) / n)) / denom
     return (max(0.0, center - half), min(1.0, center + half))
-
-
-def plot_fraction_correct_points_opto(ax, df):
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    on_mask, off_mask = get_on_off_masks(df)
-    off = df.loc[off_mask, "fraction_of_correct_responses"]
-    on  = df.loc[on_mask,  "fraction_of_correct_responses"]
-
-    off_k, off_n = int(off.sum()), int(len(off))
-    on_k,  on_n  = int(on.sum()),  int(len(on))
-
-    if off_n == 0 or on_n == 0:
-        ax.text(0.5, 0.5, "Not enough ON/OFF trials",
-                ha="center", va="center", transform=ax.transAxes, fontsize=7)
-        ax.set_axis_off()
-        return ax
-
-    off_p = off_k / off_n
-    on_p  = on_k  / on_n
-
-    off_ci = wilson_ci(off_k, off_n)
-    on_ci  = wilson_ci(on_k,  on_n)
-
-    x_off, x_on = -0.1, 0.1
-
-    ax.errorbar(
-        [x_off, x_on],
-        [off_p, on_p],
-        yerr=[
-            [off_p - off_ci[0], on_p - on_ci[0]],
-            [off_ci[1] - off_p, on_ci[1] - on_p]
-        ],
-        fmt='o', color='black', ecolor='black', capsize=4
-    )
-
-    ax.scatter(x_off, off_p, color="lightgray", s=50, zorder=3)
-    ax.scatter(x_on,  on_p,  color=on_color,   s=50, zorder=3)  # <-- NEW
-
-    ax.set_xlim(-0.2, 0.2)
-    ax.set_xticks([x_off, x_on])
-    ax.set_xticklabels(["OFF", "ON"])
-    ax.set_title("Optimal choice", fontsize=8)
-    ax.tick_params(labelsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    ax.text(
-        0.5, 0.05,
-        f"OFF: {off_k}/{off_n} | ON: {on_k}/{on_n}",
-        ha="center", va="bottom", fontsize=7, transform=ax.transAxes
-    )
-
-    return ax
 
 
 def compute_switch_rate_on_off(df):
@@ -1387,524 +982,3 @@ def compute_switch_rate_on_off(df):
         "off_switches": int(np.sum(off_switch)) if len(off_switch) else 0,
     }
     return out
-
-
-def plot_switch_rate_points_opto(ax, df):
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    d = df.copy()
-    d = d[d["response_side"].isin(["left", "right"])].copy()
-
-    if "trial" in d.columns:
-        d = d.sort_values("trial")
-
-    d["prev_side"] = d["response_side"].shift(1)
-    d = d.dropna(subset=["prev_side"]).copy()
-    d["switch"] = (d["response_side"] != d["prev_side"]).astype(int)
-
-    on_mask, off_mask = get_on_off_masks(d)
-
-    off = d.loc[off_mask, "switch"]
-    on  = d.loc[on_mask,  "switch"]
-
-    off_k, off_n = int(off.sum()), int(len(off))
-    on_k,  on_n  = int(on.sum()),  int(len(on))
-
-    if off_n == 0 or on_n == 0:
-        ax.text(0.5, 0.5, "Not enough ON/OFF trials",
-                ha="center", va="center", transform=ax.transAxes, fontsize=7)
-        ax.set_axis_off()
-        return ax
-
-    off_p = off_k / off_n
-    on_p  = on_k  / on_n
-
-    off_ci = wilson_ci(off_k, off_n)
-    on_ci  = wilson_ci(on_k,  on_n)
-
-    x_off, x_on = -0.1, 0.1
-
-    ax.errorbar(
-        [x_off, x_on],
-        [off_p, on_p],
-        yerr=[
-            [off_p - off_ci[0], on_p - on_ci[0]],
-            [off_ci[1] - off_p, on_ci[1] - on_p]
-        ],
-        fmt='o', color='black', ecolor='black', capsize=4
-    )
-
-    ax.scatter(x_off, off_p, color="lightgray", s=50, zorder=3)
-    ax.scatter(x_on,  on_p,  color=on_color,   s=50, zorder=3)  # <-- NEW
-
-    ax.set_xlim(-0.2, 0.2)
-    ax.set_xticks([x_off, x_on])
-    ax.set_xticklabels(["OFF", "ON"])
-    ax.set_ylim(0, 1)
-
-    ax.set_title("Switch rate", fontsize=8)
-    ax.tick_params(labelsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    ax.text(
-        0.5, 0.05,
-        f"OFF: {off_k}/{off_n} | ON: {on_k}/{on_n}",
-        ha="center", va="bottom", fontsize=7, transform=ax.transAxes
-    )
-
-    return ax
-
-
-
-def plot_latency_to_first_poke_opto_all_trial(
-    df,
-    ax=None,
-    test='mannwhitney',
-    opto_col='opto_trial',          # <-- CAMBIA se necessario
-    metrics=('motor_time', 'reaction_time'),
-    off_color='lightgray',
-):
-    """
-    Plotta e confronta (ON vs OFF) motor_time e reaction_time.
-    ON  = df[opto_col] == 1
-    OFF = df[opto_col] == 0
-
-    test: 'mannwhitney' (default) oppure 'ttest_log'
-    """
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 4))
-
-    d = df.copy()
-
-    # colori: ON dal tuo helper (se non esiste, fallback)
-    try:
-        on_color = get_on_color(d, col="system_name")
-    except Exception:
-        on_color = "tab:blue"
-
-    # check colonne
-    required = [opto_col, *metrics]
-    missing = [c for c in required if c not in d.columns]
-    if missing:
-        raise KeyError(f"Missing columns: {missing}")
-
-    # numeric + drop NaN + keep positive
-    for col in metrics:
-        d[col] = pd.to_numeric(d[col], errors='coerce')
-    d[opto_col] = pd.to_numeric(d[opto_col], errors='coerce')
-
-    d = d.dropna(subset=[opto_col, *metrics]).copy()
-    for col in metrics:
-        d = d[d[col] > 0].copy()
-
-    # ON/OFF masks
-    on_mask  = d[opto_col].astype(int) == 1
-    off_mask = d[opto_col].astype(int) == 0
-
-    # pull arrays
-    mt_off = d.loc[off_mask, 'motor_time'].to_numpy(float)
-    mt_on  = d.loc[on_mask,  'motor_time'].to_numpy(float)
-    rt_off = d.loc[off_mask, 'reaction_time'].to_numpy(float)
-    rt_on  = d.loc[on_mask,  'reaction_time'].to_numpy(float)
-
-    def p_and_label(a, b):
-        a = np.asarray(a, dtype=float)
-        b = np.asarray(b, dtype=float)
-        if len(a) < 2 or len(b) < 2:
-            return np.nan, "n<2"
-
-        if test == 'mannwhitney':
-            from scipy.stats import mannwhitneyu
-            p = mannwhitneyu(a, b, alternative='two-sided').pvalue
-        elif test == 'ttest_log':
-            from scipy.stats import ttest_ind
-            p = ttest_ind(np.log10(a), np.log10(b), equal_var=False).pvalue
-        else:
-            raise ValueError("test must be 'mannwhitney' or 'ttest_log'")
-
-        if np.isnan(p):
-            stars = "n/a"
-        elif p < 0.001:
-            stars = "***"
-        elif p < 0.01:
-            stars = "**"
-        elif p < 0.05:
-            stars = "*"
-        else:
-            stars = "ns"
-
-        return p, stars
-
-    # stats
-    p_mt, s_mt = p_and_label(mt_off, mt_on)
-    p_rt, s_rt = p_and_label(rt_off, rt_on)
-
-    # plot: 2 groups per metric (OFF, ON)
-    positions = [0, 1, 3, 4]  # MT off/on, RT off/on
-    data = [mt_off, mt_on, rt_off, rt_on]
-
-    bp = ax.boxplot(
-        data,
-        positions=positions,
-        widths=0.55,
-        patch_artist=True,
-        showfliers=False,
-        medianprops=dict(color="black", linewidth=2),
-        whiskerprops=dict(color="black", linewidth=1.2),
-        capprops=dict(color="black", linewidth=1.2),
-        boxprops=dict(edgecolor="black", linewidth=1.2),
-    )
-
-    # color boxes: OFF gray, ON colored
-    box_colors = [off_color, on_color, off_color, on_color]
-    for patch, c in zip(bp["boxes"], box_colors):
-        patch.set_facecolor(c)
-        patch.set_alpha(0.6)
-
-    # points (jitter) - all black
-    rng = np.random.default_rng(0)
-    for x, arr in zip(positions, data):
-        arr = np.asarray(arr, float)
-        arr = arr[np.isfinite(arr)]
-        if len(arr) == 0:
-            continue
-        jitter = (rng.random(len(arr)) - 0.5) * 0.20
-        ax.scatter(np.full(len(arr), x) + jitter, arr, color="black", s=18, alpha=0.8, zorder=3)
-
-    # labels
-    # labels
-    ax.set_xticks([0, 1, 3, 4], ["MT OFF", "MT ON", "RT OFF", "RT ON"])
-    ax.set_ylabel("seconds")
-
-    # ---- PAPER STYLE AXES ----
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_linewidth(1.2)
-    ax.spines["bottom"].set_linewidth(1.2)
-    ax.tick_params(axis='both', width=1.2)
-    ax.grid(False)
-    # --------------------------
-
-    # add stat bars (smaller text)
-    def add_bar(x1, x2, y, text):
-        h = (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.02
-        ax.plot([x1, x1, x2, x2],
-                [y, y+h, y+h, y],
-                color="black",
-                lw=1.0,
-                clip_on=False)
-        ax.text((x1+x2)/2,
-                y+h*1.15,
-                text,
-                ha="center",
-                va="bottom",
-                fontsize=8)   # <-- smaller font
-
-    # pick y positions based on data
-    all_mt = np.r_[mt_off, mt_on]
-    all_rt = np.r_[rt_off, rt_on]
-
-    y_mt = np.nanmax(all_mt) if len(all_mt) else 1.0
-    y_rt = np.nanmax(all_rt) if len(all_rt) else 1.0
-
-    add_bar(0, 1, y_mt * 1.05,
-            f"{s_mt} (p={p_mt:.3g})" if np.isfinite(p_mt) else f"{s_mt}")
-    add_bar(3, 4, y_rt * 1.05,
-            f"{s_rt} (p={p_rt:.3g})" if np.isfinite(p_rt) else f"{s_rt}")
-
-    # pick y positions based on data
-    all_mt = np.r_[mt_off, mt_on]
-    all_rt = np.r_[rt_off, rt_on]
-    y_mt = np.nanmax(all_mt) if len(all_mt) else 1.0
-    y_rt = np.nanmax(all_rt) if len(all_rt) else 1.0
-    add_bar(0, 1, y_mt * 1.05, f"{s_mt} (p={p_mt:.3g})" if np.isfinite(p_mt) else f"{s_mt}")
-    add_bar(3, 4, y_rt * 1.05, f"{s_rt} (p={p_rt:.3g})" if np.isfinite(p_rt) else f"{s_rt}")
-
-    ax.set_title(f"Latency ON vs OFF by {opto_col} ({test})\n"
-                 f"MT: n_off={len(mt_off)}, n_on={len(mt_on)} | "
-                 f"RT: n_off={len(rt_off)}, n_on={len(rt_on)}")
-
-    return {
-        "mt_off": mt_off, "mt_on": mt_on, "rt_off": rt_off, "rt_on": rt_on,
-        "p_motor": p_mt, "p_reaction": p_rt
-    }
-
-def plot_psychometric_curve_opto_all_trial(df, ax=None):
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(4, 3))
-
-    df = df.copy()
-    df = df[df['response_side'].isin(['left', 'right'])].copy()
-    df['probability_r'] = df['probability_r'].astype(float)
-    df['first_trial_response_num'] = (df['response_side'] == 'right').astype(int)
-
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    def add_psycho(sub_df, label, color, linestyle='-'):
-        if sub_df.empty:
-            return
-
-        probs = np.sort(sub_df['probability_r'].unique())
-        right_choice_freq = [
-            sub_df[sub_df['probability_r'] == p]['first_trial_response_num'].mean()
-            for p in probs
-        ]
-
-        ax.scatter(probs, right_choice_freq, color=color, s=20, label=label)
-
-        x = np.linspace(0, 1, 200)
-        try:
-            if sub_df['first_trial_response_num'].nunique() > 1 and len(sub_df) >= 5:
-                pars, _ = curve_fit(probit, sub_df['probability_r'], sub_df['first_trial_response_num'], p0=[0, 1])
-                ax.plot(x, probit(x, *pars), color=color, linewidth=2, linestyle=linestyle)
-            else:
-                ax.plot(probs, right_choice_freq, color=color, linewidth=2, linestyle=linestyle)
-        except RuntimeError:
-            ax.plot(probs, right_choice_freq, color=color, linewidth=2, linestyle=linestyle)
-
-    add_psycho(df, 'All trials', color='black', linestyle='-')
-
-    if 'opto_trial' in df.columns and 'iti_duration' in df.columns:
-        on_mask, off_mask = get_on_off_masks_opto_all_trial(df, iti_min=0.5, iti_max=10.0)
-
-        add_psycho(df.loc[on_mask],  'ON',  color=on_color, linestyle='-')      # <-- NEW
-        add_psycho(df.loc[off_mask], 'OFF', color='gray',   linestyle='--')
-
-    ax.set_ylim(0, 1)
-    ax.axhline(0.5, color='gray', linestyle='--')
-    ax.axvline(0.5, color='gray', linestyle='--')
-    ax.set_xlabel('Right reward probability')
-    ax.set_ylabel('Right choice rate')
-    ax.set_title('Psychometric curve')
-    ax.legend(loc='lower right', fontsize=6)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    return ax
-
-def plot_fraction_correct_points_opto_all_trial(ax, df):
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    on_mask, off_mask = get_on_off_masks_opto_all_trial(df)
-    off = df.loc[off_mask, "fraction_of_correct_responses"]
-    on  = df.loc[on_mask,  "fraction_of_correct_responses"]
-
-    off_k, off_n = int(off.sum()), int(len(off))
-    on_k,  on_n  = int(on.sum()),  int(len(on))
-
-    if off_n == 0 or on_n == 0:
-        ax.text(0.5, 0.5, "Not enough ON/OFF trials",
-                ha="center", va="center", transform=ax.transAxes, fontsize=7)
-        ax.set_axis_off()
-        return ax
-
-    off_p = off_k / off_n
-    on_p  = on_k  / on_n
-
-    off_ci = wilson_ci(off_k, off_n)
-    on_ci  = wilson_ci(on_k,  on_n)
-
-    x_off, x_on = -0.1, 0.1
-
-    ax.errorbar(
-        [x_off, x_on],
-        [off_p, on_p],
-        yerr=[
-            [off_p - off_ci[0], on_p - on_ci[0]],
-            [off_ci[1] - off_p, on_ci[1] - on_p]
-        ],
-        fmt='o', color='black', ecolor='black', capsize=4
-    )
-
-    ax.scatter(x_off, off_p, color="lightgray", s=50, zorder=3)
-    ax.scatter(x_on,  on_p,  color=on_color,   s=50, zorder=3)  # <-- NEW
-
-    ax.set_xlim(-0.2, 0.2)
-    ax.set_xticks([x_off, x_on])
-    ax.set_xticklabels(["OFF", "ON"])
-    ax.set_title("Optimal choice", fontsize=8)
-    ax.tick_params(labelsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    ax.text(
-        0.5, 0.05,
-        f"OFF: {off_k}/{off_n} | ON: {on_k}/{on_n}",
-        ha="center", va="bottom", fontsize=7, transform=ax.transAxes
-    )
-
-    return ax
-
-def plot_switch_rate_points_opto_all_trial(ax, df):
-    on_color = get_on_color(df, col="system_name")  # <-- NEW
-
-    d = df.copy()
-    d = d[d["response_side"].isin(["left", "right"])].copy()
-
-    if "trial" in d.columns:
-        d = d.sort_values("trial")
-
-    d["prev_side"] = d["response_side"].shift(1)
-    d = d.dropna(subset=["prev_side"]).copy()
-    d["switch"] = (d["response_side"] != d["prev_side"]).astype(int)
-
-    on_mask, off_mask = get_on_off_masks_opto_all_trial(d)
-
-    off = d.loc[off_mask, "switch"]
-    on  = d.loc[on_mask,  "switch"]
-
-    off_k, off_n = int(off.sum()), int(len(off))
-    on_k,  on_n  = int(on.sum()),  int(len(on))
-
-    if off_n == 0 or on_n == 0:
-        ax.text(0.5, 0.5, "Not enough ON/OFF trials",
-                ha="center", va="center", transform=ax.transAxes, fontsize=7)
-        ax.set_axis_off()
-        return ax
-
-    off_p = off_k / off_n
-    on_p  = on_k  / on_n
-
-    off_ci = wilson_ci(off_k, off_n)
-    on_ci  = wilson_ci(on_k,  on_n)
-
-    x_off, x_on = -0.1, 0.1
-
-    ax.errorbar(
-        [x_off, x_on],
-        [off_p, on_p],
-        yerr=[
-            [off_p - off_ci[0], on_p - on_ci[0]],
-            [off_ci[1] - off_p, on_ci[1] - on_p]
-        ],
-        fmt='o', color='black', ecolor='black', capsize=4
-    )
-
-    ax.scatter(x_off, off_p, color="lightgray", s=50, zorder=3)
-    ax.scatter(x_on,  on_p,  color=on_color,   s=50, zorder=3)  # <-- NEW
-
-    ax.set_xlim(-0.2, 0.2)
-    ax.set_xticks([x_off, x_on])
-    ax.set_xticklabels(["OFF", "ON"])
-    ax.set_ylim(0, 1)
-
-    ax.set_title("Switch rate", fontsize=8)
-    ax.tick_params(labelsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    ax.text(
-        0.5, 0.05,
-        f"OFF: {off_k}/{off_n} | ON: {on_k}/{on_n}",
-        ha="center", va="bottom", fontsize=7, transform=ax.transAxes
-    )
-
-    return ax
-
-def compute_ipsi_delta_subject_level(
-    df,
-    subj_col="subject",
-    choice_col="response_side",          # cambia se necessario
-    hemi_col="opto_type",    # cambia se necessario
-):
-
-    d = df.copy()
-
-    # --- normalize strings ---
-    d[choice_col] = d[choice_col].astype(str).str.lower().str.strip()
-    d[hemi_col]   = d[hemi_col].astype(str).str.lower().str.strip()
-
-    def norm_side(x):
-        if x in ["L", "left"]:
-            return "left"
-        if x in ["R", "right"]:
-            return "right"
-        return np.nan
-
-    d["choice_lr"] = d[choice_col].apply(norm_side)
-    d["hemi_lr"]   = d[hemi_col].apply(norm_side)
-
-    d = d.dropna(subset=[subj_col, "choice_lr", "hemi_lr"]).copy()
-
-    # --- define ipsi ---
-    d["is_ipsi"] = (d["choice_lr"] == d["hemi_lr"]).astype(int)
-
-    # --- USE YOUR MASKS ---
-    on_mask, off_mask = get_on_off_masks_opto_all_trial(d)
-
-    results = []
-
-    for subj, ds in d.groupby(subj_col):
-
-        ds_on  = ds.loc[on_mask.loc[ds.index]]
-        ds_off = ds.loc[off_mask.loc[ds.index]]
-
-        if len(ds_on) == 0 or len(ds_off) == 0:
-            continue
-
-        p_on  = ds_on["is_ipsi"].mean()
-        p_off = ds_off["is_ipsi"].mean()
-
-        results.append({
-            "subject": subj,
-            "p_ipsi_ON": p_on,
-            "p_ipsi_OFF": p_off,
-            "delta_p_ipsi_ON_minus_OFF": p_on - p_off,
-            "n_ON": len(ds_on),
-            "n_OFF": len(ds_off)
-        })
-
-    return pd.DataFrame(results)
-
-def plot_delta_ipsi_session(ax, df):
-
-    # usa le tue maschere ufficiali
-    on_mask, off_mask = get_on_off_masks_opto_all_trial(df)
-
-    # normalizza lati
-    choice = df["response_side"].astype(str).str.lower()
-    hemi   = df["opto_type"].astype(str).str.lower()
-
-    def norm(x):
-        if x in ["L", "left"]:
-            return "left"
-        if x in ["R", "right"]:
-            return "right"
-        return np.nan
-
-    choice = choice.map(norm)
-    hemi   = hemi.map(norm)
-
-    valid = choice.notna() & hemi.notna()
-    choice = choice[valid]
-    hemi   = hemi[valid]
-
-    # ipsi
-    is_ipsi = (choice == hemi).astype(int)
-
-    # allineiamo le maschere agli indici validi
-    on  = on_mask[valid]
-    off = off_mask[valid]
-
-    if on.sum() == 0 or off.sum() == 0:
-        ax.text(0.5, 0.5, "No ON/OFF", ha="center")
-        ax.axis("off")
-        return
-
-    p_on  = is_ipsi[on].mean()
-    p_off = is_ipsi[off].mean()
-    delta = p_on - p_off
-
-    # ---- PLOT ----
-    ax.axhline(0, color="black", lw=1)
-    ax.scatter(0, delta, color="black", s=25)
-
-    ax.set_xlim(-0.5, 0.5)
-    ax.set_xticks([])
-    ax.set_ylabel("Δ ipsi (On - Off)")
-    ax.set_title("Ipsi bias")
-
-    # clean style
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)

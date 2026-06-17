@@ -1,5 +1,4 @@
 from village.custom_classes.training_protocol_base import TrainingProtocolBase
-import numpy as np
 
 class TrainingProtocol(TrainingProtocolBase):
     """
@@ -12,7 +11,7 @@ class TrainingProtocol(TrainingProtocolBase):
     - default_training_settings
     - update_training_settings
 
-    In default_training_settings all the variables that can modify the state of 
+    In default_training_settings all the variables that can modify the state of
     the training protocol must be defined.
     In update_training_settings the variables are updated depeding on the
     performance of the animal.
@@ -33,7 +32,7 @@ class TrainingProtocol(TrainingProtocolBase):
 
     def __init__(self) -> None:
         super().__init__()
-        
+
     def default_training_settings(self) -> None:
         """
         This method is called when a new subject is created.
@@ -66,27 +65,13 @@ class TrainingProtocol(TrainingProtocolBase):
         self.settings.c_led_on_time = 5 * 60 # centre led on in S3
         self.settings.timeout =  3
         self.settings.noise_time = 1.5
-        
+
         self.settings.curve_power = 2
         self.settings.p = 0
         self.settings.delay_values = [0, 0.1, 0.25, 0.5, 1, 10000]
 
-        #S5 OPTO
-        self.settings.opto_sess = False
-        self.settings.optogrid_device_name = "LRV-O-0001" 
-        self.settings.opto_sequence_length = 1
-        self.settings.opto_led_selection = [1]
-        self.settings.opto_duration = [1050]
-        self.settings.opto_period = [25]
-        self.settings.opto_pulse_width = [5]
-        self.settings.opto_amplitude = [100]
-        self.settings.opto_pwm_frequency = [50000]
-        self.settings.opto_ramp_up = [0]
-        self.settings.opto_ramp_down = [200]  # adds up to the pulse
-        self.settings.start_opto_trial = 0
-
         """
-        TASK SETTINGS: Delayed Side-Cue Discriminaion Task – Deailed Description 
+        TASK SETTINGS: Delayed Side-Cue Discriminaion Task – Deailed Description
         (S6 AND it's variations)
         --------------------------------------------------------------------------
         Task structure:
@@ -105,8 +90,8 @@ class TrainingProtocol(TrainingProtocolBase):
         --------------------------------------------------------------------------
         VARIABLES
             - N_trials: max number of trials in the session
-        """                 
-        
+        """
+
         self.settings.N_trials = 1000
 
     def update_training_settings(self) -> None:
@@ -129,7 +114,7 @@ class TrainingProtocol(TrainingProtocolBase):
                 self.settings.maximum_duration = 45 * 60
             else:
                 self.settings.next_task = "S0"
-        
+
 
         elif self.last_task == "S1":
             df_S1 = self.df[self.df["task"] == "S1"]
@@ -147,7 +132,7 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.led_on_time = 300 #timeup
                     self.settings.iti_time = 1
                 else:
-                    self.settings.next_task = "S1" 
+                    self.settings.next_task = "S1"
             else:
                 self.settings.next_task = "S1" # Keep in task until it meets the criteria
 
@@ -163,11 +148,11 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.volume = 2
                     #self.settings.trials_with_same_side = 30
                     self.settings.iti_time = 1
-                    self.settings.led_on_time = 5 * 60 
-                    self.settings.c_led_on_time = 5 * 60 
+                    self.settings.led_on_time = 5 * 60
+                    self.settings.c_led_on_time = 5 * 60
                     self.settings.timeout = 0
                 else:
-                    self.settings.next_task = "S2" 
+                    self.settings.next_task = "S2"
             else:
                 self.settings.next_task = "S2" # Keep in task until it meets the criteria
 
@@ -184,17 +169,17 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.volume_large = 5
                     #self.settings.trials_with_same_side = 30
                     self.settings.iti_time = 1
-                    self.settings.led_on_time = 5 * 60 
-                    self.settings.c_led_on_time = 5 * 60 
+                    self.settings.led_on_time = 5 * 60
+                    self.settings.c_led_on_time = 5 * 60
                     self.settings.timeout = 3
                     self.settings.noise_time = 3
 
-        
+
                 else:
-                    self.settings.next_task = "S3" 
+                    self.settings.next_task = "S3"
             else:
                 self.settings.next_task = "S3" # Keep in task until it meets the criteria
-                
+
         elif self.last_task == "S4":
             df_S4 = self.df[self.df.task == "S4"]
             if len(df_S4) >= 3:
@@ -211,12 +196,12 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.p = 0
                     self.settings.delay_values = [0, 0.25, 0.5, 1, 10000]
                     self.settings.curve_power = 2
-                    
+
                 else:
-                    self.settings.next_task = "S4" 
+                    self.settings.next_task = "S4"
             else:
                 self.settings.next_task = "S4" # Keep in task until it meets the criteria
-        
+
         elif self.last_task == "S5":
             df_S5 = self.df[self.df.task == "S5"]
             previous_p = df_S5.iloc[-1]["p"] if len(df_S5) > 0 else 0.0
@@ -225,32 +210,13 @@ class TrainingProtocol(TrainingProtocolBase):
             self.settings.next_task = "S5"
             self.settings.curve_power = 2
 
-    
+
     def define_gui_tabs(self) -> None:
         self.gui_tabs = {
-            
+
             "Difficulty" : [
                 "p",
                 "delay_values",
                 "curve_power"
-            ],
-            "Optogenetics": [
-                "opto_sess",
-                "optogrid_device_name",
-                "start_opto_trial",
-                "opto_sequence_length",
-                "opto_led_selection",
-                "opto_duration",
-                "opto_period",
-                "opto_pulse_width",
-                "opto_amplitude",
-                "opto_pwm_frequency",
-                "opto_ramp_up",
-                "opto_ramp_down"]
+            ]
         }
-
-        # self.gui_tabs_restricted = {
-        #     "opto_sess": [False, True]
-        # }
-
-    
