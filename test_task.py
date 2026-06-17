@@ -1,4 +1,4 @@
-from village.custom_classes.task import BpodEvent, BpodOutput, Task
+from village.custom_classes.task_base import BpodEvent, BpodOutput, TaskBase
 
 
 # click on the link below to see the documentation about how to create
@@ -6,7 +6,7 @@ from village.custom_classes.task import BpodEvent, BpodOutput, Task
 # https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
 
 
-class SimpleTask(Task):
+class TestTask(TaskBase):
     """
     This class defines the task.
 
@@ -27,15 +27,12 @@ class SimpleTask(Task):
 
         self.info = """
 
-        Simple Task
+        Test Task
         -------------------
 
-        This task is a simple visual task where the mouse has
-        to poke in illuminated ports.
-        The center port illuminates when a trial starts.
-        After the center port is poked,
-        both side ports are illuminated and give reward.
+        Explanation
         """
+
 
     def start(self):
         """
@@ -69,45 +66,60 @@ class SimpleTask(Task):
         sends the state machine to the bpod that will run the trial.
         """
 
-        try:
-            self.bpod = self.controller
-        except Exception:
-            pass
-
         self.bpod.add_state(
-            state_name="A",
-            state_timer=1,
-            state_change_conditions={BpodEvent.Tup: "B"},
-            output_actions=[BpodOutput.SoftCode1, BpodOutput.BNC1Low],
+            state_name="waiting",
+            state_timer=0,
+            state_change_conditions={BpodEvent.Port1In: "port1_active", 
+            BpodEvent.Port2In: "port2_active", 
+            BpodEvent.Port3In: "port3_active"},
+            output_actions=[],
         )
 
         self.bpod.add_state(
-            state_name="B",
-            state_timer=1,
-            state_change_conditions={BpodEvent.Tup: "C"},
-            output_actions=[BpodOutput.BNC1High],
+            state_name="port1_active",
+            state_timer=0.1,
+            state_change_conditions={BpodEvent.Tup: "port1_active2", BpodEvent.Port1Out: "waiting"},
+            output_actions=[(BpodOutput.PWM1, 255), BpodOutput.Valve1],
         )
 
         self.bpod.add_state(
-            state_name="C",
-            state_timer=1,
-            state_change_conditions={BpodEvent.Tup: "D"},
+            state_name="port1_active2",
+            state_timer=0,
+            state_change_conditions={BpodEvent.Port1Out: "waiting"},
             output_actions=[(BpodOutput.PWM1, 255)],
         )
 
         self.bpod.add_state(
-            state_name="D",
-            state_timer=1,
-            state_change_conditions={BpodEvent.Tup: "E"},
-            output_actions=[BpodOutput.Valve1],
+            state_name="port2_active",
+            state_timer=0.1,
+            state_change_conditions={BpodEvent.Tup: "port2_active2", 
+            BpodEvent.Port2Out: "waiting"},
+            output_actions=[(BpodOutput.PWM2, 255), BpodOutput.Valve2],
         )
 
         self.bpod.add_state(
-            state_name="E",
-            state_timer=1,
-            state_change_conditions={BpodEvent.Tup: "exit"},
-            output_actions=[(BpodOutput.Serial1, 20)],
+            state_name="port2_active2",
+            state_timer=0,
+            state_change_conditions={BpodEvent.Port2Out: "waiting"},
+            output_actions=[(BpodOutput.PWM2, 255)],
         )
+
+        self.bpod.add_state(
+            state_name="port3_active",
+            state_timer=0.1,
+            state_change_conditions={BpodEvent.Tup: "port3_active2", 
+            BpodEvent.Port3Out: "waiting"},
+            output_actions=[(BpodOutput.PWM3, 255), BpodOutput.Valve3],
+        )
+
+        self.bpod.add_state(
+            state_name="port3_active2",
+            state_timer=0,
+            state_change_conditions={BpodEvent.Port3Out: "waiting"},
+            output_actions=[(BpodOutput.PWM3, 255)],
+        )
+
+
 
     def after_trial(self):
         """
@@ -121,14 +133,8 @@ class SimpleTask(Task):
         This threshold can be adjusted in the Settings tab of the GUI.
         """
 
-        # print(self.trial_data)
-
-        self.register_value("water", 20)
-
     def close(self):
         """
         Here you can perform any actions you want to take once the task is completed,
         such as sending a message via email or Slack, creating a plot, and more.
         """
-
-        pass

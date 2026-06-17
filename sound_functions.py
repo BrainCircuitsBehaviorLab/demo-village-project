@@ -2,28 +2,11 @@ import numpy as np
 
 from village.devices.sound_device import sound_device
 
-# usamos el objeto sound_device para reproducir sonidos, podemos usar las siguientes
-# propiedades:
-#   -samplerate (frecuencia de muestreo en Hz, por defecto 44100, definida en los settings de training village)
 
-# funciones:
-#     -load(left, right) (para cargar dos numpy arrays con los sonidos de los canales
-#                         izquierdo y derecho. Si uno de los dos es None,
-#                         se cargará silencio en ese canal. Si quieres cargar el mismo
-#                         sonido en ambos canales, puedes pasar el mismo array en
-#                         left y right)
-#     -load_wav(file) (para cargar un archivo .wav, simplemente hay que pasar el nombre
-#                      de un archivo que se encuentre en la carpeta /media dentro de la
-#                      carpeta del proyecto en uso y sound_device se encargara de
-#                      buscarlo y cargarlo)
-#     -play (para reproducir el sonido cargado, una vez reproducido hay que volver
-#            a cargarlo si quieres reproducirlo de nuevo)
-#     -stop (para detener la reproducción del sonido)
-
-
-# examples of generators of sounds, must return numpy arrays
+# generators of sounds, must return numpy arrays
 def tone_generator(
     duration: float,
+    gain: float,
     frequency: int,
     ramp_time: float,
 ) -> np.ndarray:
@@ -31,6 +14,7 @@ def tone_generator(
     Generate a single tone with ramping
     Args:
         duration (float): Duration (seconds)
+        gain (float): Tone amplitude
         frequency (int): Tone frequency
         ramp_time (float): Ramp up/down time (seconds)
     Returns:
@@ -44,7 +28,7 @@ def tone_generator(
     if frequency == 0:
         return np.zeros_like(time)
     # Generate tone
-    tone = np.sin(2 * np.pi * frequency * time)
+    tone = gain * np.sin(2 * np.pi * frequency * time)
     # Calculate ramp points
     sample_rate = 1 / (time[1] - time[0])
     ramp_points = int(ramp_time * sample_rate)
@@ -60,12 +44,14 @@ def tone_generator(
 
 def whitenoise_generator(
     duration: float,
+    gain: float,
     ramp_time: float,
 ) -> np.ndarray:
     """
     Generate white noise with ramping
     Args:
         duration (float): Duration (seconds)
+        gain (float): Noise amplitude
         ramp_time (float): Ramp up/down time (seconds)
     Returns:
         np.ndarray: Generated sound
@@ -75,7 +61,7 @@ def whitenoise_generator(
 
     time = np.linspace(0, duration, int(samplerate * duration))
     # Generate noise
-    noise = np.random.uniform(-1, 1, int(samplerate * duration))
+    noise = gain * np.random.uniform(-1, 1, int(samplerate * duration))
     # Calculate ramp points
     sample_rate = 1 / (time[1] - time[0])
     ramp_points = int(ramp_time * sample_rate)
@@ -89,16 +75,13 @@ def whitenoise_generator(
     return noise
 
 
-
-
-
 # calibration sounds, the only arguments are duration and gain
 def whitenoise(duration: float, gain: float) -> np.ndarray:
     return whitenoise_generator(duration=duration, gain=gain, ramp_time=0.005)
 
 
-def tone_600(duration: float, gain: float) -> np.ndarray:
-    return tone_generator(duration=duration, gain=gain, frequency=600, ramp_time=0.005)
+def tone_600(duration: float, gainer: float) -> np.ndarray:
+    return tone_generator(duration=duration, gain=gainer, frequency=600, ramp_time=0.005)
 
 
 def tone_1000(duration: float, gain: float) -> np.ndarray:

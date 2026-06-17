@@ -1,170 +1,256 @@
 from village.custom_classes.training_protocol_base import TrainingProtocolBase
-
-
-# click on the link below to see the documentation about how to create
-# tasks, plots and training protocols
-# https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
-
+import numpy as np
 
 class TrainingProtocol(TrainingProtocolBase):
     """
-    This class defines the training protocol for animal behavior experiments.
-    The training protocol is run every time a task is finished and it determines:
-    1. Which new task is scheduled for the subject
-    2. How training variables change based on performance metrics
+    This class defines how the training protocol is going to be.
+    This is, how variables change depending on different conditions (e.g. performance),
+    and/or which tasks are going to be run.
 
-    Required methods to implement:
-    - __init__: Initialize the training protocol
-    - default_training_settings: Define initial parameters. It is called when creating a new subject.
-    - update_training_settings: Update parameters after each session.
+    In this class 2 methods need to be implemented:
+    - __init__
+    - default_training_settings
+    - update_training_settings
 
-    Optional method:
-    - gui_tabs: Organize the variables in custom GUI tabs
-    """
+    In default_training_settings all the variables that can modify the state of 
+    the training protocol must be defined.
+    In update_training_settings the variables are updated depeding on the
+    performance of the animal.
+    When a new subject is created, a new row is added to the data/subjects.csv file,
+    with these variables and its values.
+
+    The following variables are needed:
+    - self.next_task
+    - self.refractory_period
+    - self.minimum_duration
+    - self.maximum_duration
+    In addition to these variables, all the necessary variables to modify the state
+    of the tasks can be included.
+
+    When a task is run the values of the variables are read from the json file.
+    When the task ends, the values of the variables are updated in the json file,
+    following the logic in the update method."""
 
     def __init__(self) -> None:
-        """Initialize the training protocol."""
         super().__init__()
-
+        
     def default_training_settings(self) -> None:
         """
-        Define all initial training parameters for new subjects.
-
-        This method is called when creating a new subject, and these parameters
-        are saved as the initial values for that subject.
-
-        Required parameters:
-        - next_task (str): Name of the next task to run
-        - refractary_period (int): Waiting time in seconds between sessions
-        - minimum_duration (int): Minimum time in seconds for the task before door2 opens
-        - maximum_duration (int): Maximum time in seconds before task stops automatically
-
-        Additional parameters:
-        You can define any additional parameters needed for your specific tasks.
-        These can be modified between sessions based on subject performance.
+        This method is called when a new subject is created.
+        It sets the default values for the training protocol.
         """
 
-        # Required parameters for any training protocol
-        self.settings.next_task = "Habituation"  # Next task to run
-        self.settings.refractory_period = (
-            3600 * 4
-        )  # 4 hours between sessions of the same subject
-        self.settings.minimum_duration = 600  # Minimum duration of 10 min
-        self.settings.maximum_duration = 900  # Maximum duration of 15 min
+        # Settings in this block are mandatory for everything
+        # that runs on Traning Village
+        # TODO
+        self.settings.next_task = "S0"
+        self.settings.refractory_period = 240 * 60 # 4 hours
+        self.settings.minimum_duration = 10 * 60
+        self.settings.maximum_duration =  15 * 60 #habituation lasts 15 mins
 
-        # Task-specific parameters
-        # (can be modified between sessions or set when the task is run manually)
-        self.settings.reward_amount_ml = 0.08  # Reward volume in milliliters
-        self.settings.stage = 1  # Current training stage
-        self.settings.light_intensity_high = (
-            255  # High light intensity in the port (0-255)
-        )
-        self.settings.light_intensity_low = (
-            50  # Low light intensity in the port (0-255)
-        )
-        self.settings.trial_types = "left_easy"
-        self.settings.punishment_time = 1  # Time in seconds for punishment
-        self.settings.iti_time = 2  # Inter-trial interval in seconds
-        self.settings.response_time = 10  # Time in seconds to respond before timeout
+        # Settings in this block are dependent on each task,
+        # and the user needs to create and define them here
 
-        self.settings.size = 200
-        self.settings.image_png = "image.png"
-        self.settings.image_jpg = "image.jpg"
-        self.settings.video = "video1.avi"
-        self.settings.stimulus_duration = 1
-        self.settings.color = "cyan"
-        self.settings.x_position = 100
-        self.settings.y_position = 300
-        self.settings.width = 500
-        self.settings.height = 30
-        self.settings.background_color = (30, 30, 30)
+        #S1
+        self.settings.volume_early = 6
+        #GENERAL SETTINGS
+        self.settings.volume = 2 # ul of water delivered, bigger during habituation
+        self.settings.volume_large = 5
+        self.settings.led_intensity = 255 # led intensity (it's at maximum)
+
+        #SHAPING SETTINGS:S1 AND S2
+        self.settings.led_on_time =  5 * 60 # side led on in S1 and S2
+        self.settings.iti_time = 1 #time to wait after the reward is delivered
+
+        #SHAPING SETTINGS:S3
+        self.settings.c_led_on_time = 5 * 60 # centre led on in S3
+        self.settings.timeout =  3
+        self.settings.noise_time = 1.5
+        
+        self.settings.curve_power = 2
+        self.settings.p = 0
+        self.settings.delay_values = [0, 0.1, 0.25, 0.5, 1, 10000]
+
+        #S5 OPTO
+        self.settings.opto_sess = False
+        self.settings.optogrid_device_name = "LRV-O-0001" 
+        self.settings.opto_sequence_length = 1
+        self.settings.opto_led_selection = [1]
+        self.settings.opto_duration = [1050]
+        self.settings.opto_period = [25]
+        self.settings.opto_pulse_width = [5]
+        self.settings.opto_amplitude = [100]
+        self.settings.opto_pwm_frequency = [50000]
+        self.settings.opto_ramp_up = [0]
+        self.settings.opto_ramp_down = [200]  # adds up to the pulse
+        self.settings.start_opto_trial = 0
+
+        """
+        TASK SETTINGS: Delayed Side-Cue Discriminaion Task – Deailed Description 
+        (S6 AND it's variations)
+        --------------------------------------------------------------------------
+        Task structure:
+        Animals perform a 2-choice discrimination task based on which side LED turns ON first.
+
+        TRIAL PARAMETERS:
+        - Inter-cue delay: discrete values in [0, 0.48] s
+        - Maximum response window: 40 s
+        - ITI and timeout defined in settings
+
+        NOTES:
+        - Correct side is pre-generated per trial (first_led_side_vec).
+        - Delay between cues is pre-generated per trial (inter_led_delay_vec).
+        - Decision is based on FIRST poke after first LEDs is available.
+
+        --------------------------------------------------------------------------
+        VARIABLES
+            - N_trials: max number of trials in the session
+        """                 
+        
+        self.settings.N_trials = 1000
 
     def update_training_settings(self) -> None:
         """
-        Update training parameters after each session.
+        This method is called every time a session finishes.
+        It is used to make the animal progress in the training protocol.
 
-        This method is called when a session finishes and determines how
-        the subject progresses through the training protocol.
-
-        Available data for decision-making:
-        - self.subject (str): Name of the current subject
-        - self.last_task (str): Name of the task that just finished
-        - self.df (pd.DataFrame): DataFrame with all sessions data for this subject
-
-        Example logic:
-        - Progress from Habituation to FollowTheLight after 2 sessions with >100 trials
-        - Reduce reward amount as training progresses
-        - Advance to stage 2 after two consecutive sessions in FollowTheLight with >85% performance
+        For this example, we want the animal to go from S0 to S1
+        after 2 sessions, as long as it completed overall more than 100 trials.
+        We also want to decrease the reward amount during the first sessions.
+        We promote the animals to the second training stage in S1
+        when they do two consecutive sessions with over 85% performance.
+        Note that in this case, they never go back to the easier task.
         """
+        if self.last_task == "S0":
+            df_S0 = self.df[self.df["task"] == "S0"]
+            if len(df_S0) >= 1:
+                self.settings.next_task = "S1"
+                self.settings.minimum_duration = 25 * 60
+                self.settings.maximum_duration = 45 * 60
+            else:
+                self.settings.next_task = "S0"
+        
 
-        if self.last_task == "Habituation":
-            # Get all Habituation sessions from the dataframe
-            df_habituation = self.df[self.df["task"] == "Habituation"]
+        elif self.last_task == "S1":
+            df_S1 = self.df[self.df["task"] == "S1"]
+            if len(df_S1) >= 2:
+                df_last_two_session_s1 = df_S1.iloc[-2:]
+                n_trials_S1 = df_last_two_session_s1.trial.sum()
+                if n_trials_S1 >= 100:
+                    self.settings.next_task = "S2"
+                    self.settings.minimum_duration = 25 * 60
+                    self.settings.maximum_duration = 45 * 60
+                    self.settings.volume = 2
+                    self.settings.volume_large = 5
 
-            # Check if the animal completed at least 2 Habituation sessions
-            if len(df_habituation) >= 2:
-                # Get data from the last session
-                df_last_session = df_habituation.iloc[-1]
-                trials_last_session = df_last_session["trial"].iloc[-1]
+                    #self.settings.trials_with_same_side = 20
+                    self.settings.led_on_time = 300 #timeup
+                    self.settings.iti_time = 1
+                else:
+                    self.settings.next_task = "S1" 
+            else:
+                self.settings.next_task = "S1" # Keep in task until it meets the criteria
 
-                # Progress to next task if criteria met (>100 trials)
-                if trials_last_session >= 100:
-                    self.settings.next_task = "FollowTheLight"
-                    self.settings.reward_amount_ml = 0.07  # Decrease reward
+        elif self.last_task == "S2":
+            df_S2 = self.df[self.df.task == "S2"]
+            if len(df_S2) >= 2:
+                df_last_two_session_S2 = df_S2.iloc[-2:]
+                n_trials_S2 = df_last_two_session_S2.trial.sum()
+                if n_trials_S2 >= 100:
+                    self.settings.next_task = "S3"
+                    self.settings.minimum_duration = 30 * 60
+                    self.settings.maximum_duration = 45 * 60
+                    self.settings.volume = 2
+                    #self.settings.trials_with_same_side = 30
+                    self.settings.iti_time = 1
+                    self.settings.led_on_time = 5 * 60 
+                    self.settings.c_led_on_time = 5 * 60 
+                    self.settings.timeout = 0
+                else:
+                    self.settings.next_task = "S2" 
+            else:
+                self.settings.next_task = "S2" # Keep in task until it meets the criteria
 
-        elif self.last_task == "FollowTheLight":
-            # Get all FollowTheLight sessions
-            df_follow_the_light = self.df[self.df["task"] == "FollowTheLight"]
+        elif self.last_task == "S3":
+            df_S3 = self.df[self.df.task == "S3"]
+            if len(df_S3) >= 3:
+                df_last_two_session_S3 = df_S3.iloc[-2:]
+                n_trials_S3 = df_last_two_session_S3.trial.sum()
+                if n_trials_S3 >= 200:
+                    self.settings.next_task = "S4"
+                    self.settings.minimum_duration = 30 * 60
+                    self.settings.maximum_duration = 45 * 60
+                    self.settings.volume = 2
+                    self.settings.volume_large = 5
+                    #self.settings.trials_with_same_side = 30
+                    self.settings.iti_time = 1
+                    self.settings.led_on_time = 5 * 60 
+                    self.settings.c_led_on_time = 5 * 60 
+                    self.settings.timeout = 3
+                    self.settings.noise_time = 3
 
-            # Check if at least 2 sessions completed
-            if len(df_follow_the_light) >= 2:
-                # Get data from the last two sessions
-                df_last_session = df_follow_the_light.iloc[-1]
-                df_previous_session = df_follow_the_light.iloc[-2]
+        
+                else:
+                    self.settings.next_task = "S3" 
+            else:
+                self.settings.next_task = "S3" # Keep in task until it meets the criteria
+                
+        elif self.last_task == "S4":
+            df_S4 = self.df[self.df.task == "S4"]
+            if len(df_S4) >= 3:
+                df_last_two_session_S4 = df_S4.iloc[-2:]
+                n_trials_S4 = df_last_two_session_S4.trial.sum()
+                if n_trials_S4 >= 200:
+                    self.settings.next_task = "S5"
+                    self.settings.minimum_duration = 45 * 60
+                    self.settings.maximum_duration = 60 * 60
+                    self.settings.volume = 2
+                    self.settings.volume_large = 5
+                    self.settings.timeout = 3
+                    self.settings.iti_time = 1
+                    self.settings.p = 0
+                    self.settings.delay_values = [0, 0.25, 0.5, 1, 10000]
+                    self.settings.curve_power = 2
+                    
+                else:
+                    self.settings.next_task = "S4" 
+            else:
+                self.settings.next_task = "S4" # Keep in task until it meets the criteria
+        
+        elif self.last_task == "S5":
+            df_S5 = self.df[self.df.task == "S5"]
+            previous_p = df_S5.iloc[-1]["p"] if len(df_S5) > 0 else 0.0
+            self.settings.p = max(previous_p - 0.05, 0.0)
+            self.settings.delay_values = [0, 0.25, 0.5, 1, 10000]
+            self.settings.next_task = "S5"
+            self.settings.curve_power = 2
 
-                # Calculate performance metrics
-                performance_last_session = df_last_session["correct"].mean()
-                performance_previous_session = df_previous_session["correct"].mean()
-                trials_last_session = df_last_session["trial"].iloc[-1]
-                trials_previous_session = df_previous_session["trial"].iloc[-1]
-
-                # Advance to stage 2 if criteria met
-                # (>85% correct in two sessions with >100 trials each)
-                if (
-                    performance_last_session >= 0.85
-                    and performance_previous_session >= 0.85
-                    and trials_last_session >= 100
-                    and trials_previous_session >= 100
-                ):
-                    self.settings.stage = 2
-                    self.settings.reward_amount_ml = 0.05  # Decrease reward
-
-    def define_gui_tabs(self):
-        """
-        Define the organization of the settings in the GUI.
-
-        Whatever that is not defined here will be placed in the "General" tab.
-        They need to have the same name as your settings variables.
-        You can use the 'Hide' tab to hide a setting from the GUI.
-        Items in the lists need to have the same name as your settings variables.
-        You can also restrict the possible values for each setting.
-        """
+    
+    def define_gui_tabs(self) -> None:
         self.gui_tabs = {
-            "Port_variables": [
-                "reward_amount_ml",
-                "light_intensity_high",
-                "light_intensity_low",
+            
+            "Difficulty" : [
+                "p",
+                "delay_values",
+                "curve_power"
             ],
-            "Other_variables": [
-                "stage",
-                "trial_types",
-                "punishment_time",
-                "iti_time",
-                "response_time",
-            ],
+            "Optogenetics": [
+                "opto_sess",
+                "optogrid_device_name",
+                "start_opto_trial",
+                "opto_sequence_length",
+                "opto_led_selection",
+                "opto_duration",
+                "opto_period",
+                "opto_pulse_width",
+                "opto_amplitude",
+                "opto_pwm_frequency",
+                "opto_ramp_up",
+                "opto_ramp_down"]
         }
 
-        # Define possible values for each variable
-        self.gui_tabs_restricted = {
-            "trial_types": ["left_easy", "right_easy", "left_hard", "right_hard"],
-        }
+        # self.gui_tabs_restricted = {
+        #     "opto_sess": [False, True]
+        # }
+
+    
